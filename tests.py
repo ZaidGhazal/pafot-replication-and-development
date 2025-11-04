@@ -10,6 +10,7 @@ import os
 import json
 import csv
 import copy
+from pathlib import Path
 
 logger = loguru.logger
 
@@ -17,10 +18,12 @@ from example_sof import Player
 from ego import Ego
 import mutator
 
-# Create a folder for saving the files
-output_folder = "Output/"+datetime.now().strftime("%Y-%m-%d-%H:%M")
-os.mkdir(output_folder)
-logger.add(output_folder+'.log')
+BASE_DIR = Path(r"C:\Users\zghazal\pafot-main")  # adjust if needed
+ts = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")  # <-- no colons
+
+OUTPUT_DIR = BASE_DIR / "Output" / ts
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+output_folder = OUTPUT_DIR # or any directory you want
 
 # Variables
 map_name = 'Town06'
@@ -33,7 +36,7 @@ npc_top_speed = 90
 pop_size = 8 
 p_mutation = 0.5
 p_crossover = 0.5
-max_gen = 100
+max_gen = 50
 
 best_scenarios = []
 no_progress = False
@@ -236,7 +239,10 @@ def on_collision(args):
     npc_col = args.other_actor
     ego_col = args.actor
     npc_col_quad = get_quadrant(ego_col, npc_col)
-    ego_speed = ego.vehicle.get_velocity().length()
+    if ego.vehicle.is_alive:
+        ego_speed = ego.vehicle.get_velocity().length()
+    else:
+        ego_speed = 0.0
     global collision_type
     if ego_speed <= 0.1:
         ego_fault = False
@@ -558,7 +564,7 @@ for gen in range(max_gen):
 
 # Save fitness, solutions, and everyting else into something (list?) that can be accessed by the mutator            
     # print("population", pop_ff)
-    with open(output_folder+"/gen_"+str(gen)+".txt", "x") as f:
+    with open(os.path.join(output_folder, "gen_"+str(gen)+".txt"), 'w', encoding='utf-8') as f:
         json.dump(pop_ff, f)
         f.close()
 
@@ -654,12 +660,13 @@ for gen in range(max_gen):
         population = mutator.process(pop_ff, p_mutation, p_crossover)
 
 # Write simulation results to a CSV
-with open(output_folder+"/results_sim.csv", 'x', encoding='UTF8', newline='') as c:
+
+with open(os.path.join(output_folder, "results_sim.csv"), 'w', encoding='utf-8', newline='') as c:
     writer = csv.writer(c)
     writer.writerow(csv_headers)
     writer.writerows(csv_data)
 
-with open(output_folder+"best_scenarios.csv", 'x', encoding='UTF8', newline='') as b:
+with open(os.path.join(output_folder, "best_scenarios.csv"), 'w', encoding='utf-8', newline='') as b:
     writer_sce = csv.writer(b)
     writer_sce.writerow(['scenario', 'fitness'])
     writer_sce.writerows(best_scenarios)
