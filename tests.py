@@ -5,7 +5,7 @@ import math
 import random
 from datetime import datetime
 import liability
-import aux
+import utility as aux
 import os
 import json
 import csv
@@ -18,10 +18,9 @@ from example_sof import Player
 from ego import Ego
 import mutator
 
-BASE_DIR = Path(r"C:\Users\zghazal\pafot-main")  # adjust if needed
 ts = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")  # <-- no colons
 
-OUTPUT_DIR = BASE_DIR / "Output" / ts
+OUTPUT_DIR = Path("Output") / ts
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 output_folder = OUTPUT_DIR # or any directory you want
 

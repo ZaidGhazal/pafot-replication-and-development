@@ -2,7 +2,7 @@ import random
 import copy
 from loguru import logger
 
-import aux
+import utility as aux
 
 
 touched_chs = []
