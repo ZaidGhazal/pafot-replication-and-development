@@ -27,6 +27,7 @@ output_folder = OUTPUT_DIR # or any directory you want
 # Variables
 map_name = 'Town06'
 map_name_long = "Carla/Maps/Town06"
+situation = 3  # 0: baseline (2 NPCs, sunny, no defensive), 1: 2 NPCs sunny defensive, 2: 4 NPCs sunny defensive, 3: 4 NPCs rainy defensive
 ego_circle_sens = 20
 npc = None
 npc_top_speed = 90
@@ -306,8 +307,13 @@ def start_npcs(number_npcs, ev, sol):
 
     for npcs in range(number_npcs):
         try:
-            index_tr = get_spawn_wps(ego, index[npcs])
-            npc = Player(world, npc_bp, index_tr[0].transform)
+            spawn_point = npc_spawns[npcs % len(npc_spawns)]
+            npc = Player(world, npc_bp, spawn_point)
+            npc.vehicle.set_autopilot(True, traffic_manager.get_port())
+            if defensive:
+                traffic_manager.distance_to_leading_vehicle(npc.vehicle, 8.0)           # modest gap
+                traffic_manager.auto_lane_change(npc.vehicle, False)                     # fewer surprises
+                traffic_manager.vehicle_percentage_speed_difference(npc.vehicle, -20.0)  # ~90% of limit
             npc_list.append(npc)
             world.wait_for_tick() # Same as with spectator, don't know why it's needed
         except Exception as e:
@@ -345,19 +351,22 @@ else:
 
 logger.info("Loaded map " + map.name)
 
+world.set_weather(carla.WeatherParameters.MidRainyNoon if situation >= 3 else carla.WeatherParameters.ClearNoon)
+
 vehicles = []
 
 spawns = world.get_map().get_spawn_points()
 bp_library = world.get_blueprint_library()
 
-number_npcs = 2 # Let's do one for now, we'll have to change the code to accommodate more NPCs
-npc_bp = bp_library.find('vehicle.nissan.micra') # Fow now same type of vehicle, we can change this later
+number_npcs = 2 if situation < 2 else 1  # Adjust based on situation
+npc_bp = bp_library.find('vehicle.nissan.micra') # For now same type of vehicle, we can change this later
 npcs_spawned = False
 logger.info("Spawning {} NPCs", number_npcs)
 
 # Generate a random solution
 gen_0 = True
 population = {}
+## Prepare the initial population for gen 0
 for ind in range(pop_size):
     solution = {}
     current__position = random.randint(1,8)
@@ -376,6 +385,8 @@ pop_ff = {}
 # Set up the TM in synchronous mode
 traffic_manager = client.get_trafficmanager()
 traffic_manager.set_synchronous_mode(True)
+
+defensive = situation > 0  # Enable defensive behavior for situations 1,2,3
 
 time_between_genes = 10
 
