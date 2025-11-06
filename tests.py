@@ -27,7 +27,7 @@ output_folder = OUTPUT_DIR # or any directory you want
 # Variables
 map_name = 'Town06'
 map_name_long = "Carla/Maps/Town06"
-situation = 3  # 0: baseline (2 NPCs, sunny, no defensive), 1: 2 NPCs sunny defensive, 2: 4 NPCs sunny defensive, 3: 4 NPCs rainy defensive
+situation = 2  # 0: baseline (2 NPCs, sunny, no defensive), 1: 2 NPCs sunny defensive, 2: 4 NPCs sunny defensive, 3: 4 NPCs rainy defensive
 ego_circle_sens = 20
 npc = None
 npc_top_speed = 90
@@ -358,7 +358,7 @@ vehicles = []
 spawns = world.get_map().get_spawn_points()
 bp_library = world.get_blueprint_library()
 
-number_npcs = 2 if situation < 2 else 1  # Adjust based on situation
+number_npcs = 2 if situation <= 2 else 1  # Adjust based on situation
 npc_bp = bp_library.find('vehicle.nissan.micra') # For now same type of vehicle, we can change this later
 npcs_spawned = False
 logger.info("Spawning {} NPCs", number_npcs)

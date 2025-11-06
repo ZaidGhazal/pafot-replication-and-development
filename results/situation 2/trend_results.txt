@@ -1,0 +1,49 @@
+n_generations: 50
+
+fitness_trend: 
+ spearman_rho: 0.3861
+ 
+ spearman_p_value: 0.0056
+ 
+ theil_sen_slope: 0.7437
+ 
+ confidence_interval: (0.2594, 1.3361)
+ 
+ description: Measures the trend of fitness values across generations. "
+            "- Spearman’s rho indicates the direction and strength of a monotonic trend "
+            "(positive → increasing, negative → decreasing). "
+            "- The p-value tests the significance of that correlation (p < 0.05 → significant). "
+            "- The Theil–Sen slope gives the estimated rate of change per generation, "
+            "with its confidence interval showing uncertainty. "
+            "→ Interpretation: If rho > 0 and p < 0.05, fitness is improving over generations; "
+            "if rho < 0 and p < 0.05, it is deteriorating; otherwise, it is stable.
+
+collision_trend: 
+ Z_stat: 0.6283
+ 
+ p_value: 0.5298
+ 
+ description: Assesses whether the probability of collisions changes monotonically with generation, "
+            "using the Cochran–Armitage trend test. "
+            "- Z_stat > 0 suggests an increasing trend in collision rate; "
+            "Z_stat < 0 suggests a decreasing trend. "
+            "- The p-value indicates significance (p < 0.05 → significant trend). "
+            "→ Interpretation: If p < 0.05 and Z_stat < 0, collisions are decreasing (improving safety); "
+            "if p < 0.05 and Z_stat > 0, collisions are increasing; otherwise, collision rate is stable.
+
+execution_time_trend: 
+ spearman_rho: 0.0552
+ 
+ spearman_p_value: 0.7035
+ 
+ theil_sen_slope: 0.0
+ 
+ confidence_interval: (-0.1364, 0.1714)
+ 
+ description: Evaluates whether average execution time changes across generations. "
+            "- Spearman’s rho measures monotonic direction; p-value tests significance. "
+            "- The Theil–Sen slope estimates how execution time changes per generation. "
+            "→ Interpretation: If rho > 0 and p < 0.05, execution time is increasing; "
+            "if rho < 0 and p < 0.05, it is decreasing; if p ≥ 0.05 or the confidence interval crosses 0, "
+            "there is no significant trend and execution time is stable.
+
