@@ -32,7 +32,7 @@ npc = None
 npc_top_speed = 90
 
 # Mutator/GA Parameters
-pop_size = 8 
+pop_size = 10
 p_mutation = 0.5
 p_crossover = 0.5
 max_gen = 50
@@ -292,9 +292,9 @@ def start_npcs(number_npcs, ev, sol):
 
     npc_list = []
     spawns_positions = []
-    for i in range(number_npcs):
+    for i in range(number_npcs): # for each NPC in the solution
         if sol['npc'+str(i)][0][1] not in spawns_positions:
-            spawns_positions.append(sol['npc'+str(i)][0][1])
+            spawns_positions.append(sol['npc'+str(i)][0][1]) # Add the position to the list of used positions
         else:
             spawns_positions.append(sol['npc'+str(i)][0][1]+1) if sol['npc'+str(i)][0][1] < 8 else spawns_positions.append(sol['npc'+str(i)][0][1]-1)
             logger.warning("Trying to spawn two NPCs in the same position")
@@ -363,12 +363,12 @@ for ind in range(pop_size):
     current__position = random.randint(1,8)
     for i in range(number_npcs):
         s = []
-        for j in range(6):
-            next_position = aux.generate_next_pos(current__position)
-            s.append([random.randrange(0, npc_top_speed), next_position])
+        for j in range(6): # Each NPC gets a [v, pos] action for six actions, one each 10 seconds
+            next_position = aux.generate_next_pos(current__position) # If 1, can go to 1,2,or 8. If 8, can go to 7,8,or 1. Else, can go to current, current-1, current+1
+            s.append([random.randrange(0, npc_top_speed), next_position]) ## Add the new velocity and position
             current__position = next_position
-        solution.update({"npc"+str(i):s})
-    population['pop_'+str(ind)] = solution
+        solution.update({"npc"+str(i):s}) # Add the [v, pos] list to the solution dictionary
+    population['pop_'+str(ind)] = solution 
 logger.info("Generated " + str(pop_size) + "starting solutions")
 
 pop_ff = {}
@@ -389,6 +389,7 @@ control_signal = None
 
 
 for gen in range(max_gen):
+    # Initialize variables for the generation
     sim_start_time = datetime.now()
     min_distance = 9999
     mettc = 9999
@@ -400,8 +401,11 @@ for gen in range(max_gen):
     next_gene = 1
 
     for pop in population.copy().keys():
-        target_position = [population[pop]['npc0'][0][1], population[pop]['npc1'][0][1]]
-        vel_ref = [population[pop]["npc0"][0][0], population[pop]["npc1"][0][0]]
+        target_position = []
+        vel_ref = []
+        for i in range(number_npcs):
+            target_position.append(population[pop]['npc'+str(i)][0][1])
+            vel_ref.append(population[pop]['npc'+str(i)][0][0])
         logger.info("Moving NPC to " + str(target_position) + " positions with vel_ref " + str(vel_ref))
         # For each scenario
         sim_time = True
@@ -421,13 +425,14 @@ for gen in range(max_gen):
             #TODO move the solution gene thingy here and calculate mettc with the starting point
             npc_in = 0
             for i in range(len(npc_list)):
-                if sim_time_elapsed.seconds == (next_gene * 10):
+                if sim_time_elapsed.seconds >= (next_gene * 10):
                     gene_executed = next_gene
                     next_gene += 1
                     for j in range(len(npc_list)):
                         try:
-                            target_position[j] = solution["npc"+str(j)][gene_executed][1]
-                            vel_ref[j] = solution["npc"+str(j)][gene_executed][0]
+                            if gene_executed < len(solution["npc"+str(j)]):
+                                target_position[j] = solution["npc"+str(j)][gene_executed][1]
+                                vel_ref[j] = solution["npc"+str(j)][gene_executed][0]
                         except:
                             pass
                         logger.info("Moving NPC" + str(j) + " to position " + str(target_position[j]) + " with vel_ref " + str(vel_ref[j]))
@@ -498,7 +503,7 @@ for gen in range(max_gen):
                             try:
                                 neo_wp = waypoints[0]
                             except:
-                                pass
+                                neo_wp = waypoints[0]
                         control_signal = npc_list[i].controller.run_step(vel_npc,neo_wp)
                         npc_list[i].vehicle.apply_control(control_signal)
 
@@ -513,9 +518,9 @@ for gen in range(max_gen):
                         except Exception as e:
                             logger.error(str(e))
                             try:
-                                neo_wp = npc_neo_wp.next(5)[0]
+                                neo_wp = waypoints[0].next(5.0)[0]
                             except:
-                                pass
+                                neo_wp = waypoints[0]
                         control_signal = npc_list[i].controller.run_step(vel_npc * 0.1 ,neo_wp)
                     else:
                         npc_neo_wp =  map.get_waypoint(npc_list[i].vehicle.get_location())
@@ -526,7 +531,7 @@ for gen in range(max_gen):
                             try:
                                 neo_wp = npc_neo_wp.next(5)[0]
                             except:
-                                pass
+                                neo_wp = npc_neo_wp
                         control_signal = npc_list[i].controller.run_step(vel_npc, neo_wp)
 
                     npc_list[i].vehicle.apply_control(control_signal)
